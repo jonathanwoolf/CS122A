@@ -1,7 +1,12 @@
-/*
-This code was automatically generated using the Riverside-Irvine State machine Builder tool
-Version 2.7 --- 10/2/2018 22:23:25 PST
-*/
+/*	Partner(s) Name & E-mail: Jonathan Woolf jwool003@ucr.edu
+ *	Lab Section: tues thursday 2-5
+ *	Assignment: Lab #1  Exercise #2 
+ *	Exercise Description: [optional - include for your own benefit]
+ *	
+ *	I acknowledge all content contained herein, excluding template or example
+ *	code, is my own original work.
+ */
+
 
 #include "rims.h"
 
@@ -162,6 +167,32 @@ TickFct_State_machine_2() {
    return SM2_State;
 }
 
+const unsigned char array2[10] = {0x81, 0x42, 0x24, 0x18, 0xFF};
+
+enum SM3_States { music, wait3 } SM3_State;
+
+TickFct_State_machine_3() {
+   static unsigned char i = 0;
+   switch(SM3_State) { // Transitions
+      case -1:
+         SM3_State = music;
+         break;
+      case SM2_B0: 
+         B = array2[i];
+         i++;
+         if(i >= 5) {i = 0;}
+         SM3_State = wait2;
+         if(A7 == 1 && A6 == 0) {SM3_State = music;}
+         break;
+      case wait3:
+         SM3_State = wait3;
+         if(A7 == 1 && A6 == 0) {SM3_State = music;}
+         break;
+      default:
+         SM3_State = music;
+   } // Transitions
+   return SM3_State;
+}
 enum SM4_States { main4, wait4 } SM4_State;
 
 TickFct_State_machine_4() {
@@ -188,21 +219,23 @@ TickFct_State_machine_4() {
 int main() {
    const unsigned int periodState_machine_1 = 1000; // 1000 ms default
    const unsigned int periodState_machine_2 = 1000; // 1000 ms default
+   const unsigned int periodState_machine_3 = 500;
    TimerSet(periodState_machine_2);
    TimerOn();
    
    SM1_State = -1;
    SM2_State = -1; // Initial state
+   SM3_State = -1;
    SM4_State = -1;
    B = 0; // Init outputs
 
    while(1) {
       TickFct_State_machine_1();
       TickFct_State_machine_2();
+      TickFct_State_machine_3();
       TickFct_State_machine_4();
       while(!SM1_Clk);
       SM1_Clk = 0;
    } // while (1)
 } // Main
-
 
