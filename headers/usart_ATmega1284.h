@@ -115,4 +115,4 @@ unsigned char USART_Receive(unsigned char usartNum)
 	}
 }
 
-#endif USART_1284_H
+#endif //USART_1284_H

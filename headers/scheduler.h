@@ -13,7 +13,7 @@
 unsigned long tasksPeriodGCD = 1; // Start count from here, down to 0. Default 1ms
 unsigned long tasksPeriodCntDown = 0; // Current internal count of 1ms ticks
 
-unsigned char tasksNum = 0; // Number of tasks in the scheduler. Default 0 tasks
+//unsigned char tasksNum = 0; // Number of tasks in the scheduler. Default 0 tasks
 
 ////////////////////////////////////////////////////////////////////////////////
 // Struct for Tasks represent a running process in our simple real-time operating system
@@ -24,7 +24,7 @@ typedef struct task {
 	int (*TickFct)(int); 		//Task tick function
 } task;
 
-task* tasks;
+task tasks[tasksNum];
 
 ///////////////////////////////////////////////////////////////////////////////
 // Heart of the scheduler code
