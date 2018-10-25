@@ -12,9 +12,9 @@
     <OutputFileName>$(MSBuildProjectName)</OutputFileName>
     <OutputFileExtension>.elf</OutputFileExtension>
     <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
-    <AssemblyName>jwool003_lab5_part1</AssemblyName>
-    <Name>jwool003_lab5_part1</Name>
-    <RootNamespace>jwool003_lab5_part1</RootNamespace>
+    <AssemblyName>jwool003_lab5_part2</AssemblyName>
+    <Name>jwool003_lab5_part2</Name>
+    <RootNamespace>jwool003_lab5_part2</RootNamespace>
     <ToolchainFlavour>Native</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
     <OverrideVtor>false</OverrideVtor>
