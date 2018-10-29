@@ -51,10 +51,10 @@ int TickFct_speed(int speed_state)
 	switch(speed_state)
 	{
 	case speed_check:
-		if((joystick < 450) || (joystick > 600)) { tasks[1].period = 1000;}
-		if((joystick < 350) || (joystick > 700)) { tasks[1].period = 500;}
-		if((joystick < 250) || (joystick > 800)) { tasks[1].period = 250;}
-		if((joystick < 150) || (joystick > 900)) { tasks[1].period = 50;}
+		if((joystick < 450) || (joystick > 600)) { tasks[1].period = 500;}
+		if((joystick < 350) || (joystick > 700)) { tasks[1].period = 250;}
+		if((joystick < 250) || (joystick > 800)) { tasks[1].period = 100;}
+		if((joystick < 150) || (joystick > 900)) { tasks[1].period = 25;}
 		speed_state = speed_check;
 		break;
 	}
@@ -139,12 +139,12 @@ int main(void)
 	tasks[i].TickFct = &TickFct_speed;
 	i++;
 	tasks[i].state = start;
-	tasks[i].period = 1000;
+	tasks[i].period = 500;
 	tasks[i].elapsedTime = 0;
 	tasks[i].TickFct = &TickFct_movement;
 	i++;
 	tasks[i].state = -1;
-	tasks[i].period = 1;
+	tasks[i].period = 50;
 	tasks[i].elapsedTime = 0;
 	tasks[i].TickFct = &TickFct_LEDState;
     while (1) 
