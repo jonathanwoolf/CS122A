@@ -44,16 +44,16 @@ enum speed_states {speed_check} speed_state;
 int TickFct_speed(int speed_state)
 {
 	Set_A2D_Pin(0x03); // Sets analog signal to the up/down axis of the left joystick
-// 	convert();
-// 	joystick2 = ADC;
+ 	convert();
+ 	joystick2 = ADC;
 	
 	switch(speed_state)
 	{
 		case speed_check: // Decides how fast the car is going
 			if((joystick2 < 500) || (joystick2 > 600)) { tasks[1].period = 500;}
 			if((joystick2 < 400) || (joystick2 > 700)) { tasks[1].period = 250;}
-			if((joystick2 < 200) || (joystick2 > 900)) { tasks[1].period = 100;}
-			if((joystick2 < 100) || (joystick2 > 1000)) { tasks[1].period = 25;}
+			if((joystick2 < 200) || (joystick2 > 800)) { tasks[1].period = 100;}
+			if((joystick2 < 100) || (joystick2 > 900)) { tasks[1].period = 25;}
 			speed_state = speed_check;
 			break;
 	}
@@ -71,11 +71,13 @@ int TickFct_movement(int movement_state)
 			joystick = ADC; // Read ADC value into joystick variable
 			if(joystick < 500) // Joystick is being tilted left
 			{
+				//PORTD = PORTD | 0x01;
 				if(column_val == 0x01) { column_val = 0x80;} // Move left a row
 				else if (column_val != 0x01) { column_val = (column_val >> 1);} // Obviously a right shift must occur
 			}
 			if(joystick > 600) // Joystick is being tilted right
 			{
+				//PORTD = PORTD & 0xFE;
 				if(column_val == 0x80) { column_val = 0x01;} // Move right a row
 				else if (column_val != 0x80) { column_val = (column_val << 1);} // Obviously a left shift must occur
 			}
@@ -83,15 +85,17 @@ int TickFct_movement(int movement_state)
 			break;
 		case up_down: // Left joystick controls forward and reverse movements
  			Set_A2D_Pin(0x03); // Sets analog signal to the up/down axis of the left joystick
-// 			convert();
-//			joystick2 = ADC; // Read ADC value into joystick2 variable 
+ 			convert();
+			joystick2 = ADC; // Read ADC value into joystick2 variable 
 			if(joystick2 > 600) // Joystick is being tilted up 
 			{
+				//PORTD = PORTD | 0x02;
 				if(column_sel == 0x01) { column_sel = 0x80;} // Move up a column
 				else if (column_sel != 0x01) { column_sel = (column_sel >> 1);} // Obviously a right shift must occur
 			}
 			if(joystick2 < 500) // Joystick is being tilted down
 			{
+				//PORTD = PORTD & 0xFD;
 				if(column_sel == 0x80) { column_sel = 0x01;} // Move down a column
 				else if (column_sel != 0x80) { column_sel = (column_sel << 1);} // Obviously a left shift must occur
 			}
@@ -111,8 +115,9 @@ int TickFct_LEDState(int state)
 	switch(LED_state)
 	{
 		case synch:
-		PORTB = ~column_sel;
-		PORTD = column_val;
+		PORTB = 0x01;
+		//PORTB = ~column_sel;
+		//PORTD = column_val;
 		LED_state = synch;
 		break;
 		default:
@@ -132,6 +137,7 @@ int main(void)
 	TimerOn();
 	A2D_init();
 	
+	PORTD = 0x01; 
 	unsigned char i = 0;
 	tasks[i].state = speed_check;
 	tasks[i].period = 50;
