@@ -55,8 +55,8 @@ int uart_tick(int state)
 	switch(state)
 	{
 		case uart_start:
-			tmpA = 0x00;
-			tmpB = 0x00;
+			tmpA = 0x10;
+			tmpB = 0x08;
 			s_data = 0x00;
 			flag = 0;
 			state = send;
@@ -68,19 +68,8 @@ int uart_tick(int state)
 			state = toggle;
 			break;
 		case toggle:
-			tmpA = column_val;
-			tmpB = ~column_sel;
-			if(USART_HasTransmitted(1))
-			{
-				if(s_data == tmpA)
-				{
-					s_data = tmpB;
-				}
-				else
-				{
-					s_data = tmpA;
-				}
-			}
+			if(flag) { tmpA = r_data; flag = 0;}
+			else { tmpB = r_data; flag = 1;}
 			state = send;
 			break;
 		default:
@@ -98,8 +87,8 @@ int TickFct_LEDState(int state)
 	{
 		case synch:
 			//PORTB = 0x01; //Test for DC Motor
-			PORTB = ~column_sel;
-			PORTA = column_val;
+			PORTB = tmpB;
+			PORTA = tmpA;
 			LED_state = synch;
 			break;
 		default:

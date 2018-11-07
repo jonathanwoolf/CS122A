@@ -117,27 +117,12 @@ int uart_tick(int state)
 	switch(state)
 	{
 		case uart_start:
-			tmpA = 0x00;
-			tmpB = 0x00;
 			s_data = 0x00;
-			flag = 0;
+			flag = 1;
 			state = send;
 			break;
 		case send:
-			if(USART_IsSendReady(1))
-			{
-				USART_Send(s_data, 1);
-// 				if(flag)
-// 				{
-// 					tmpA = s_data;
-// 					flag = 0;
-// 				}
-// 				else
-// 				{
-// 					tmpB = s_data;
-// 					flag = 1;
-// 				}
-			}
+			if(USART_IsSendReady(1)) { USART_Send(s_data, 1);}
 			state = toggle;
 			break;
 		case toggle:
@@ -145,14 +130,9 @@ int uart_tick(int state)
 			tmpB = ~column_sel;
 			if(USART_HasTransmitted(1))
 			{
-				if(s_data == tmpA)
-				{
-					s_data = tmpB;
-				}
-				else
-				{
-					s_data = tmpA;
-				}
+				if(flag) { s_data = tmpB; flag = 0;}
+				if(s_data == tmpA) { s_data = tmpB;}
+				else { s_data = tmpA;}
 			}
 			state = send;
 			break;
