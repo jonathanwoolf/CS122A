@@ -14,6 +14,10 @@
 unsigned char column_val = 0x08; // Sets the pattern displayed on columns
 unsigned char column_sel = 0x10; // Grounds column to display pattern
 
+//Remove when test is complete
+unsigned char test1 = 0;
+unsigned char test2 = 0;
+
 unsigned short joystick = 550; // Variable to store ADC value of 1st joystick
 unsigned short joystick2 = 550; // Variable to store ADC value of 2nd joystick
 
@@ -60,6 +64,7 @@ int TickFct_speed(int speed_state)
 	return speed_state;
 }
 
+// Joysticks are actually wired sideways so left/right and up/down are switched but the states are labeled correctly for their observed actions
 enum movement_states {left_right, up_down} movement_state;
 int TickFct_movement(int movement_state)
 {
@@ -69,18 +74,20 @@ int TickFct_movement(int movement_state)
 			Set_A2D_Pin(0x00); // Sets analog signal to the left/right axis of the right joystick
 			convert();
 			joystick = ADC; // Read ADC value into joystick variable
-			if(joystick < 500) // Joystick is being tilted left
+			if(joystick > 650) // Joystick is being tilted left
 			{
-				//PORTD = PORTD | 0x01;
+				test1 = 1;
 				if(column_val == 0x01) { column_val = 0x80;} // Move left a row
 				else if (column_val != 0x01) { column_val = (column_val >> 1);} // Obviously a right shift must occur
 			}
-			if(joystick > 600) // Joystick is being tilted right
+			if(joystick < 500) // Joystick is being tilted right
 			{
-				//PORTD = PORTD & 0xFE;
+	
+				test1 = 0;
 				if(column_val == 0x80) { column_val = 0x01;} // Move right a row
 				else if (column_val != 0x80) { column_val = (column_val << 1);} // Obviously a left shift must occur
 			}
+			
 			movement_state = up_down;
 			break;
 		case up_down: // Left joystick controls forward and reverse movements
@@ -89,13 +96,13 @@ int TickFct_movement(int movement_state)
 			joystick2 = ADC; // Read ADC value into joystick2 variable 
 			if(joystick2 > 600) // Joystick is being tilted up 
 			{
-				//PORTD = PORTD | 0x02;
+				test2 = 1;
 				if(column_sel == 0x01) { column_sel = 0x80;} // Move up a column
 				else if (column_sel != 0x01) { column_sel = (column_sel >> 1);} // Obviously a right shift must occur
 			}
 			if(joystick2 < 500) // Joystick is being tilted down
 			{
-				//PORTD = PORTD & 0xFD;
+				test2 = 0;
 				if(column_sel == 0x80) { column_sel = 0x01;} // Move down a column
 				else if (column_sel != 0x80) { column_sel = (column_sel << 1);} // Obviously a left shift must occur
 			}
@@ -115,7 +122,11 @@ int TickFct_LEDState(int state)
 	switch(LED_state)
 	{
 		case synch:
-		PORTB = 0x01;
+		if(test1 && test2) {PORTD = 0x03;}
+		else if(test1) {PORTD = 0x01;}
+		else if(test2) {PORTD = 0x02;}
+		else {PORTD = 0x00;}
+		//PORTB = 0x01; //Test for DC Motor
 		//PORTB = ~column_sel;
 		//PORTD = column_val;
 		LED_state = synch;
@@ -137,7 +148,6 @@ int main(void)
 	TimerOn();
 	A2D_init();
 	
-	PORTD = 0x01; 
 	unsigned char i = 0;
 	tasks[i].state = speed_check;
 	tasks[i].period = 50;
