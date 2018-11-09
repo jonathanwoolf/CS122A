@@ -24,6 +24,8 @@ unsigned char carYAxis = 0; // 0 - reverse, 1 - forward
 
 unsigned short joystick, joystick2; // Variables to store ADC values of joysticks
 
+// Code provided by UCR for ADC
+
 // Pins on PORTA are used as input for A2D conversion
 // The Default Channel is 0 (PA0)
 // The value of pinNum determines the pin on PORTA used for A2D conversion
@@ -46,6 +48,8 @@ void convert(){
 	ADCSRA |= (1 << ADSC); // start ADC conversion
 	while ( !(ADCSRA & (1<<ADIF))); // wait till ADC conversion
 }
+
+// End of code provided by UCR for ADC
 
 // Sets speed for drive and reverse
 enum speed_states {speed_check} speed_state;
@@ -78,32 +82,37 @@ int TickFct_movement(int movement_state)
 			Set_A2D_Pin(0x00); // Sets analog signal to the left/right axis of the right joystick
 			convert();
 			joystick = ADC; // Read ADC value into joystick variable
+			carXAxis = 0; // No motion detected on x-axis
 			if(joystick > 650) // Joystick is being tilted left
 			{
-				if(column_val == 0x01) { column_val = 0x80;} // Move left a row
-				else if (column_val != 0x01) { column_val = (column_val >> 1);} // Obviously a right shift must occur
+				carXAxis = 1;
+// 				if(column_val == 0x01) { column_val = 0x80;} // Move left a row
+// 				else if (column_val != 0x01) { column_val = (column_val >> 1);} // Obviously a right shift must occur
 			}
 			if(joystick < 450) // Joystick is being tilted right
 			{
-				if(column_val == 0x80) { column_val = 0x01;} // Move right a row
-				else if (column_val != 0x80) { column_val = (column_val << 1);} // Obviously a left shift must occur
+				carXAxis = 2; 
+// 				if(column_val == 0x80) { column_val = 0x01;} // Move right a row
+// 				else if (column_val != 0x80) { column_val = (column_val << 1);} // Obviously a left shift must occur
 			}
-			
 			movement_state = up_down;
 			break;
 		case up_down: // Left joystick controls forward and reverse movements
  			Set_A2D_Pin(0x03); // Sets analog signal to the up/down axis of the left joystick
  			convert();
 			joystick2 = ADC; // Read ADC value into joystick2 variable 
+			carYAxis = 0; // No motion detected on y-axis
 			if(joystick2 > 600) // Joystick is being tilted up 
 			{
-				if(column_sel == 0x01) { column_sel = 0x80;} // Move up a column
-				else if (column_sel != 0x01) { column_sel = (column_sel >> 1);} // Obviously a right shift must occur
+				carYAxis = 1; 
+// 				if(column_sel == 0x01) { column_sel = 0x80;} // Move up a column
+// 				else if (column_sel != 0x01) { column_sel = (column_sel >> 1);} // Obviously a right shift must occur
 			}
 			if(joystick2 < 500) // Joystick is being tilted down
 			{
-				if(column_sel == 0x80) { column_sel = 0x01;} // Move down a column
-				else if (column_sel != 0x80) { column_sel = (column_sel << 1);} // Obviously a left shift must occur
+				carYAxis = 2;
+// 				if(column_sel == 0x80) { column_sel = 0x01;} // Move down a column
+// 				else if (column_sel != 0x80) { column_sel = (column_sel << 1);} // Obviously a left shift must occur
 			}
 			movement_state = left_right; // Return to left right state
 			break;
@@ -121,7 +130,7 @@ int uart_tick(int state)
 	switch(state)
 	{
 		case uart_start:
-			s_data = 0x03;
+			s_data = 0x00;
 			state = send;
 			break;
 		case send:
@@ -129,11 +138,9 @@ int uart_tick(int state)
 			state = toggle;
 			break;
 		case toggle:
-			tmpA = column_val;
-			tmpB = ~column_sel;
 			if(USART_HasTransmitted(1))
 			{
-				s_data = 0x03; //tmpA;
+				s_data = carYAxis;
 			}
 			state = send;
 			break;
@@ -144,38 +151,18 @@ int uart_tick(int state)
 	return state;
 }
 
-// Test harness for LED matrix to make sure all user inputs are read in correctly
-// enum LED_states {synch} LED_state;
-// int TickFct_LEDState(int state)
-// {
-// 	switch(LED_state)
-// 	{
-// 		case synch:
-// 			if(test1 && test2) {PORTD = 0x30;}
-// 			else if(test1) {PORTD = 0x10;}
-// 			else if(test2) {PORTD = 0x20;}
-// 			else {PORTD = 0x00;}
-// 			//PORTB = 0x01; //Test for DC Motor
-// 			//PORTB = ~column_sel;
-// 			//PORTD = column_val;
-// 			LED_state = synch;
-// 			break;
-// 		default:
-// 			LED_state = synch;
-// 			break;
-// 	}
-// 	return LED_state;
-// }
 
 int main(void)
 {
 	DDRA = 0x00; PORTA = 0xFF; // Input
 	DDRB = 0xFF; PORTB = 0x00; // Output to column sel
-	DDRD = 0xFF; PORTD = 0x00; // Output to column val
+    // Output from RF transmitter will be sent from TX1 DO NOT INITIALIZE DDRD / PORTD as it will not send
 	
 	TimerSet(timerPeriod);
 	TimerOn();
 	A2D_init();
+	
+	initUSART(1);
 	
 	unsigned char i = 0;
 	tasks[i].state = speed_check;
@@ -189,14 +176,10 @@ int main(void)
 	tasks[i].TickFct = &TickFct_movement;
 	i++;
 	tasks[i].state = uart_start;
-	tasks[i].period = 10;
+	tasks[i].period = 50;
 	tasks[i].elapsedTime = 0;
 	tasks[i].TickFct = &uart_tick;
-// 	i++;
-// 	tasks[i].state = -1;
-// 	tasks[i].period = 50;
-// 	tasks[i].elapsedTime = 0;
-// 	tasks[i].TickFct = &TickFct_LEDState;
+
 	while (1)
 	{
 	}
