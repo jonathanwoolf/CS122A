@@ -86,7 +86,6 @@ int TickFct_movement(int movement_state)
 				if(column_sel == 0x80) { column_sel = 0x01;} // Move down a column
 				else if (column_sel != 0x80) { column_sel = (column_sel << 1);} // Obviously a left shift must occur
 			}
-			//else { column_sel = column_sel;}
 			movement_state = left_right; // Return to left right state
 			break;
 		default:
@@ -133,7 +132,7 @@ int main(void)
 	tasks[i].TickFct = &uart_tick;
 	i++;
 	tasks[i].state = -1;
-	tasks[i].period = 500;
+	tasks[i].period = 250;
 	tasks[i].elapsedTime = 0;
 	tasks[i].TickFct = &TickFct_movement;
 	i++;
