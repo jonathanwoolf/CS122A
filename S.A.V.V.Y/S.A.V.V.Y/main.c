@@ -13,12 +13,14 @@
 #include "scheduler.h"
 #include "usart_ATmega1284.h"
 
-unsigned char tmpA, tmpB, r_data, s_data, flag; // USART variables
+unsigned char tmpA, tmpB, s_data, flag; // USART variables
 
 unsigned char column_val = 0x08; // Sets the pattern displayed on columns
 unsigned char column_sel = 0x10; // Grounds column to display pattern
 
-unsigned char test1, test2 = 0x00; //Remove when done
+unsigned char carSpeed = 0; // 0 - stopped, 1 - slow, 2 - medium, 3 - fast
+unsigned char carXAxis = 1; // 0 - left, 1 - straight, 2 - right
+unsigned char carYAxis = 0; // 0 - reverse, 1 - forward
 
 unsigned short joystick, joystick2; // Variables to store ADC values of joysticks
 
@@ -78,13 +80,11 @@ int TickFct_movement(int movement_state)
 			joystick = ADC; // Read ADC value into joystick variable
 			if(joystick > 650) // Joystick is being tilted left
 			{
-				test1 = 1;
 				if(column_val == 0x01) { column_val = 0x80;} // Move left a row
 				else if (column_val != 0x01) { column_val = (column_val >> 1);} // Obviously a right shift must occur
 			}
 			if(joystick < 450) // Joystick is being tilted right
 			{
-				test1 = 0;
 				if(column_val == 0x80) { column_val = 0x01;} // Move right a row
 				else if (column_val != 0x80) { column_val = (column_val << 1);} // Obviously a left shift must occur
 			}
@@ -97,13 +97,11 @@ int TickFct_movement(int movement_state)
 			joystick2 = ADC; // Read ADC value into joystick2 variable 
 			if(joystick2 > 600) // Joystick is being tilted up 
 			{
-				test2 = 1;
 				if(column_sel == 0x01) { column_sel = 0x80;} // Move up a column
 				else if (column_sel != 0x01) { column_sel = (column_sel >> 1);} // Obviously a right shift must occur
 			}
 			if(joystick2 < 500) // Joystick is being tilted down
 			{
-				test2 = 0;
 				if(column_sel == 0x80) { column_sel = 0x01;} // Move down a column
 				else if (column_sel != 0x80) { column_sel = (column_sel << 1);} // Obviously a left shift must occur
 			}
@@ -117,60 +115,57 @@ int TickFct_movement(int movement_state)
 }
 
 
-// enum uart_state{uart_start, send, toggle};
-// int uart_tick(int state)
-// {
-// 	switch(state)
-// 	{
-// 		case uart_start:
-// 			s_data = 0x00;
-// 			flag = 1;
-// 			state = send;
-// 			break;
-// 		case send:
-// 			if(USART_IsSendReady(1)) { USART_Send(s_data, 1);}
-// 			state = toggle;
-// 			break;
-// 		case toggle:
-// 			tmpA = column_val;
-// 			tmpB = ~column_sel;
-// 			if(USART_HasTransmitted(1))
-// 			{
-// 				if(flag) { s_data = tmpB; flag = 0;}
-// 				if(s_data == tmpA) { s_data = tmpB;}
-// 				else { s_data = tmpA;}
-// 			}
-// 			state = send;
-// 			break;
-// 		default:
-// 			state = uart_start;
-// 			break;
-// 	}
-// 	return state;
-// }
-
-// Test harness for LED matrix to make sure all user inputs are read in correctly
-enum LED_states {synch} LED_state;
-int TickFct_LEDState(int state)
+enum uart_state{uart_start, send, toggle};
+int uart_tick(int state)
 {
-	switch(LED_state)
+	switch(state)
 	{
-		case synch:
-			if(test1 && test2) {PORTD = 0x30;}
-			else if(test1) {PORTD = 0x10;}
-			else if(test2) {PORTD = 0x20;}
-			else {PORTD = 0x00;}
-			//PORTB = 0x01; //Test for DC Motor
-			//PORTB = ~column_sel;
-			//PORTD = column_val;
-			LED_state = synch;
+		case uart_start:
+			s_data = 0x03;
+			state = send;
+			break;
+		case send:
+			if(USART_IsSendReady(1)) { USART_Send(s_data, 1);}
+			state = toggle;
+			break;
+		case toggle:
+			tmpA = column_val;
+			tmpB = ~column_sel;
+			if(USART_HasTransmitted(1))
+			{
+				s_data = 0x03; //tmpA;
+			}
+			state = send;
 			break;
 		default:
-			LED_state = synch;
+			state = uart_start;
 			break;
 	}
-	return LED_state;
+	return state;
 }
+
+// Test harness for LED matrix to make sure all user inputs are read in correctly
+// enum LED_states {synch} LED_state;
+// int TickFct_LEDState(int state)
+// {
+// 	switch(LED_state)
+// 	{
+// 		case synch:
+// 			if(test1 && test2) {PORTD = 0x30;}
+// 			else if(test1) {PORTD = 0x10;}
+// 			else if(test2) {PORTD = 0x20;}
+// 			else {PORTD = 0x00;}
+// 			//PORTB = 0x01; //Test for DC Motor
+// 			//PORTB = ~column_sel;
+// 			//PORTD = column_val;
+// 			LED_state = synch;
+// 			break;
+// 		default:
+// 			LED_state = synch;
+// 			break;
+// 	}
+// 	return LED_state;
+// }
 
 int main(void)
 {
@@ -192,16 +187,16 @@ int main(void)
 	tasks[i].period = 500;
 	tasks[i].elapsedTime = 0;
 	tasks[i].TickFct = &TickFct_movement;
-// 	i++;
-// 	tasks[i].state = uart_start;
-// 	tasks[i].period = 10;
-// 	tasks[i].elapsedTime = 0;
-// 	tasks[i].TickFct = &uart_tick;
 	i++;
-	tasks[i].state = -1;
-	tasks[i].period = 50;
+	tasks[i].state = uart_start;
+	tasks[i].period = 10;
 	tasks[i].elapsedTime = 0;
-	tasks[i].TickFct = &TickFct_LEDState;
+	tasks[i].TickFct = &uart_tick;
+// 	i++;
+// 	tasks[i].state = -1;
+// 	tasks[i].period = 50;
+// 	tasks[i].elapsedTime = 0;
+// 	tasks[i].TickFct = &TickFct_LEDState;
 	while (1)
 	{
 	}
