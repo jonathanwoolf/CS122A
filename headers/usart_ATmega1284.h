@@ -9,7 +9,7 @@
 
 // USART Setup Values
 #define F_CPU 8000000UL // Assume uC operates at 8MHz
-#define BAUD_RATE 2400 // default baud rate for atmega 1284 of 9600 not compatible with 434mhz rf communicators 
+#define BAUD_RATE 300 // default baud rate for atmega 1284 of 9600 not compatible with 434mhz rf communicators 
 #define BAUD_PRESCALE (((F_CPU / (BAUD_RATE * 16UL))) - 1)
 
 ////////////////////////////////////////////////////////////////////////////////

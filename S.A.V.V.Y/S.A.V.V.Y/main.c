@@ -15,12 +15,11 @@
 
 unsigned char tmpA, tmpB, s_data, flag; // USART variables
 
-unsigned char column_val = 0x08; // Sets the pattern displayed on columns
-unsigned char column_sel = 0x10; // Grounds column to display pattern
+unsigned char carSpeed = 0; // 00 - stopped, 01 - creep, 10 - medium, 11 - fast
+unsigned char carXAxis = 0; // 10 - left, 00 - straight, 01 - right
+unsigned char carYAxis = 0; // 0 - forward, 1 - reverse
 
-unsigned char carSpeed = 0; // 0 - stopped, 1 - slow, 2 - medium, 3 - fast
-unsigned char carXAxis = 1; // 0 - left, 1 - straight, 2 - right
-unsigned char carYAxis = 0; // 0 - reverse, 1 - forward
+unsigned char carValues = 0x00; // bits 0-1 are speed, 2-3 are left/right, 4 is forward/reverse
 
 unsigned short joystick, joystick2; // Variables to store ADC values of joysticks
 
@@ -62,10 +61,10 @@ int TickFct_speed(int speed_state)
 	switch(speed_state)
 	{
 		case speed_check: // Decides how fast the car is going
-			if((joystick2 < 500) || (joystick2 > 600)) { tasks[1].period = 500;}
-			if((joystick2 < 400) || (joystick2 > 700)) { tasks[1].period = 250;}
-			if((joystick2 < 200) || (joystick2 > 800)) { tasks[1].period = 100;}
-			if((joystick2 < 100) || (joystick2 > 900)) { tasks[1].period = 25;}
+			carValues = (carValues & 0xFC); // speed value set to 00 for stopped
+			if((joystick2 < 500) || (joystick2 > 600)) { carValues = ((carValues & 0xFC) | 0x01);} // speed value set to 01 for creep
+			if((joystick2 < 250) || (joystick2 > 800)) { carValues = ((carValues & 0xFC) | 0x02);} // speed value set to 10 for medium
+			if((joystick2 < 100) || (joystick2 > 900)) { carValues = ((carValues & 0xFC) | 0x03);} // speed value set to 11 for fast
 			speed_state = speed_check;
 			break;
 	}
@@ -82,18 +81,14 @@ int TickFct_movement(int movement_state)
 			Set_A2D_Pin(0x00); // Sets analog signal to the left/right axis of the right joystick
 			convert();
 			joystick = ADC; // Read ADC value into joystick variable
-			carXAxis = 0; // No motion detected on x-axis
-			if(joystick > 650) // Joystick is being tilted left
+			carValues = (carValues & 0xF3); // L/R set to 00 for straight
+			if(joystick > 750) // Joystick is being tilted left
 			{
-				carXAxis = 1;
-// 				if(column_val == 0x01) { column_val = 0x80;} // Move left a row
-// 				else if (column_val != 0x01) { column_val = (column_val >> 1);} // Obviously a right shift must occur
+				carValues = ((carValues & 0xF3) | 0x08); // L/R set to 10 for left
 			}
 			if(joystick < 450) // Joystick is being tilted right
 			{
-				carXAxis = 2; 
-// 				if(column_val == 0x80) { column_val = 0x01;} // Move right a row
-// 				else if (column_val != 0x80) { column_val = (column_val << 1);} // Obviously a left shift must occur
+				carValues = ((carValues & 0xF3) | 0x04); // L/R set to 01 for right
 			}
 			movement_state = up_down;
 			break;
@@ -101,18 +96,13 @@ int TickFct_movement(int movement_state)
  			Set_A2D_Pin(0x03); // Sets analog signal to the up/down axis of the left joystick
  			convert();
 			joystick2 = ADC; // Read ADC value into joystick2 variable 
-			carYAxis = 0; // No motion detected on y-axis
 			if(joystick2 > 600) // Joystick is being tilted up 
 			{
-				carYAxis = 1; 
-// 				if(column_sel == 0x01) { column_sel = 0x80;} // Move up a column
-// 				else if (column_sel != 0x01) { column_sel = (column_sel >> 1);} // Obviously a right shift must occur
+				carValues = (carValues & 0xEF); // F/R set to 0 for forward
 			}
 			if(joystick2 < 500) // Joystick is being tilted down
 			{
-				carYAxis = 2;
-// 				if(column_sel == 0x80) { column_sel = 0x01;} // Move down a column
-// 				else if (column_sel != 0x80) { column_sel = (column_sel << 1);} // Obviously a left shift must occur
+				carValues = (carValues | 0x10); // F/R set to 1 for reverse
 			}
 			movement_state = left_right; // Return to left right state
 			break;
@@ -140,7 +130,7 @@ int uart_tick(int state)
 		case toggle:
 			if(USART_HasTransmitted(1))
 			{
-				s_data = carYAxis;
+				s_data = carValues;
 			}
 			state = send;
 			break;
