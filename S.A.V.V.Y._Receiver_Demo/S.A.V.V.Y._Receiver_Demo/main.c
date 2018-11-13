@@ -51,12 +51,11 @@ int uart_tick(int state)
 			break;
 		case toggle:
 			carValues = r_data;
-			//PORTB = ~ carValues;
-			carSpeed = (carValues & 0x02);  
-			carXAxis = ((carValues >> 2) & 0x02);
+			carSpeed = (carValues & 0x03);  
+			carXAxis = ((carValues >> 2) & 0x03);
 			carYAxis = ((carValues >> 4) & 0x01);
-			if(carSpeed == 0x01) { tasks[1].period = 500;}
-			else if(carSpeed == 0x02) { tasks[1].period = 250;}
+			if(carSpeed == 0x01) { tasks[1].period = 300;}
+			else if(carSpeed == 0x02) { tasks[1].period = 150;}
 			else if(carSpeed == 0x03) { tasks[1].period = 50;}
 			state = receive;
 			break;
@@ -74,17 +73,16 @@ int TickFct_movement(int movement_state)
 	switch(movement_state)
 	{
 		case left_right: // Right joystick controls left and right movements
-			if(carXAxis == 0x02) // Joystick is being tilted left
+			if(carXAxis == 0x01) // Joystick is being tilted right (it is pointed the wrong way so if wired differently this code must be flipped
 			{
 				if(column_val == 0x01) { column_val = 0x80;} // Move left a row
 				else if (column_val != 0x01) { column_val = (column_val >> 1);} // Obviously a right shift must occur
 			}
-			else if(carXAxis == 0x01) // Joystick is being tilted right
+			if(carXAxis == 0x02) // Joystick is being tilted left
 			{
 				if(column_val == 0x80) { column_val = 0x01;} // Move right a row
 				else if (column_val != 0x80) { column_val = (column_val << 1);} // Obviously a left shift must occur
 			}
-			else { column_val = column_val;} // Joystick is not being tilted
 			movement_state = up_down;
 			break;
 		case up_down: // Left joystick controls forward and reverse movements
@@ -93,7 +91,7 @@ int TickFct_movement(int movement_state)
 				if(column_sel == 0x01) { column_sel = 0x80;} // Move up a column
 				else if (column_sel != 0x01) { column_sel = (column_sel >> 1);} // Obviously a right shift must occur
 			}
-			else if(carYAxis == 0x01 && carSpeed >= 0x01) // Joystick is being tilted down
+			if(carYAxis == 0x01 && carSpeed >= 0x01) // Joystick is being tilted down
 			{
 				if(column_sel == 0x80) { column_sel = 0x01;} // Move down a column
 				else if (column_sel != 0x80) { column_sel = (column_sel << 1);} // Obviously a left shift must occur
@@ -144,7 +142,7 @@ int main(void)
 	tasks[i].TickFct = &uart_tick;
 	i++;
 	tasks[i].state = -1;
-	tasks[i].period = 500;
+	tasks[i].period = 300;
 	tasks[i].elapsedTime = 0;
 	tasks[i].TickFct = &TickFct_movement;
 	i++;

@@ -63,7 +63,7 @@ int TickFct_speed(int speed_state)
 		case speed_check: // Decides how fast the car is going
 			carValues = (carValues & 0xFC); // speed value set to 00 for stopped
 			if((joystick2 < 500) || (joystick2 > 600)) { carValues = ((carValues & 0xFC) | 0x01);} // speed value set to 01 for creep
-			if((joystick2 < 250) || (joystick2 > 800)) { carValues = ((carValues & 0xFC) | 0x02);} // speed value set to 10 for medium
+			if((joystick2 < 150) || (joystick2 > 850)) { carValues = ((carValues & 0xFC) | 0x02);} // speed value set to 10 for medium
 			if((joystick2 < 100) || (joystick2 > 900)) { carValues = ((carValues & 0xFC) | 0x03);} // speed value set to 11 for fast
 			speed_state = speed_check;
 			break;
@@ -114,7 +114,7 @@ int TickFct_movement(int movement_state)
 }
 
 
-enum uart_state{uart_start, send, toggle};
+enum uart_state{uart_start, send};
 int uart_tick(int state)
 {
 	switch(state)
@@ -125,9 +125,6 @@ int uart_tick(int state)
 			break;
 		case send:
 			if(USART_IsSendReady(1)) { USART_Send(s_data, 1);}
-			state = toggle;
-			break;
-		case toggle:
 			if(USART_HasTransmitted(1))
 			{
 				s_data = carValues;
