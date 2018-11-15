@@ -42,9 +42,9 @@ int uart_tick(int state)
 			carSpeed = (carValues & 0x03);  
 			carXAxis = ((carValues >> 2) & 0x03);
 			carYAxis = ((carValues >> 4) & 0x01);
-			if(carSpeed == 0x01) { tasks[1].period = 300;}
-			else if(carSpeed == 0x02) { tasks[1].period = 150;}
-			else if(carSpeed == 0x03) { tasks[1].period = 50;}
+// 			if(carSpeed == 0x01) { tasks[1].period = 300;}
+// 			else if(carSpeed == 0x02) { tasks[1].period = 150;}
+// 			else if(carSpeed == 0x03) { tasks[1].period = 50;}
 			state = receive;
 			break;
 		default:
@@ -76,13 +76,15 @@ int TickFct_movement(int movement_state)
 		case up_down: // Left joystick controls forward and reverse movements
 			if(carYAxis == 0x00 && carSpeed >= 0x01) // Joystick is being tilted up
 			{
-// 				if(column_sel == 0x01) { column_sel = 0x80;} // Move up a column
-// 				else if (column_sel != 0x01) { column_sel = (column_sel >> 1);} // Obviously a right shift must occur
+				PORTB = 0x91; // Forward friends 10 signals to output 
 			}
-			if(carYAxis == 0x01 && carSpeed >= 0x01) // Joystick is being tilted down
+			else if(carYAxis == 0x01 && carSpeed >= 0x01) // Joystick is being tilted down
 			{
-// 				if(column_sel == 0x80) { column_sel = 0x01;} // Move down a column
-// 				else if (column_sel != 0x80) { column_sel = (column_sel << 1);} // Obviously a left shift must occur
+				PORTB = 0x4A; // Backwards buds 01 signals to output
+			}
+			else 
+			{
+				PORTB = 0x00;
 			}
 			movement_state = left_right; // Return to left right state
 			break;
@@ -100,7 +102,7 @@ int TickFct_carState(int state)
 	switch(car_state)
 	{
 		case synch:
-			//PORTB = 0x01; //Test for DC Motor
+			//PORTB = 0x0F; //Test for DC Motor 0x08 is clockwise so 0x10 is counter
 			car_state = synch;
 			break;
 		default:
@@ -128,7 +130,7 @@ int main(void)
 	tasks[i].TickFct = &uart_tick;
 	i++;
 	tasks[i].state = -1;
-	tasks[i].period = 300;
+	tasks[i].period = 5;
 	tasks[i].elapsedTime = 0;
 	tasks[i].TickFct = &TickFct_movement;
 	i++;
