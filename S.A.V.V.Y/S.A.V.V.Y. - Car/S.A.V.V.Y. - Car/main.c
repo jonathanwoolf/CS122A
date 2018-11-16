@@ -77,10 +77,12 @@ int TickFct_movement(int movement_state)
 			if(carYAxis == 0x00 && carSpeed >= 0x01) // Joystick is being tilted up
 			{
 				PORTB = 0x91; // Forward friends 10 signals to output 
+				PORTD = 0xA0;
 			}
 			else if(carYAxis == 0x01 && carSpeed >= 0x01) // Joystick is being tilted down
 			{
 				PORTB = 0x4A; // Backwards buds 01 signals to output
+				PORTD = 0x50;
 			}
 			else 
 			{
