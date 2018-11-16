@@ -6,7 +6,7 @@
  */ 
 
 #define timerPeriod 1
-#define tasksNum 3
+#define tasksNum 2
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -87,6 +87,7 @@ int TickFct_movement(int movement_state)
 			else 
 			{
 				PORTB = 0x00;
+				PORTD = 0x00;
 			}
 			movement_state = left_right; // Return to left right state
 			break;
@@ -98,21 +99,21 @@ int TickFct_movement(int movement_state)
 }
 
 // Test harness for LED matrix to make sure all user inputs are read in correctly
-enum car_States {synch} car_state;
-int TickFct_carState(int state)
-{
-	switch(car_state)
-	{
-		case synch:
-			//PORTB = 0x0F; //Test for DC Motor 0x08 is clockwise so 0x10 is counter
-			car_state = synch;
-			break;
-		default:
-			car_state = synch;
-			break;
-	}
-	return car_state;
-}
+// enum car_States {synch} car_state;
+// int TickFct_carState(int state)
+// {
+// 	switch(car_state)
+// 	{
+// 		case synch:
+// 			//PORTB = 0x0F; //Test for DC Motor 0x08 is clockwise so 0x10 is counter
+// 			car_state = synch;
+// 			break;
+// 		default:
+// 			car_state = synch;
+// 			break;
+// 	}
+// 	return car_state;
+// }
 
 int main(void)
 {
@@ -135,11 +136,11 @@ int main(void)
 	tasks[i].period = 5;
 	tasks[i].elapsedTime = 0;
 	tasks[i].TickFct = &TickFct_movement;
-	i++;
-	tasks[i].state = -1;
-	tasks[i].period = 50;
-	tasks[i].elapsedTime = 0;
-	tasks[i].TickFct = &TickFct_carState;
+// 	i++;
+// 	tasks[i].state = -1;
+// 	tasks[i].period = 50;
+// 	tasks[i].elapsedTime = 0;
+// 	tasks[i].TickFct = &TickFct_carState;
 	
 	while (1)
 	{
