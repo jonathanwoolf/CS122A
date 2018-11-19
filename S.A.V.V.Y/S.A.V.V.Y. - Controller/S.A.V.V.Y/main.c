@@ -13,7 +13,7 @@
 #include "scheduler.h"
 #include "usart_ATmega1284.h"
 
-unsigned char tmpA, tmpB, s_data, flag; // USART variables
+unsigned char s_data, counter; // USART variables
 
 unsigned char carSpeed = 0; // 00 - stopped, 01 - creep, 10 - medium, 11 - fast
 unsigned char carXAxis = 0; // 10 - left, 00 - straight, 01 - right
@@ -121,15 +121,21 @@ int uart_tick(int state)
 	{
 		case uart_start:
 			s_data = 0x00;
-			state = send;
-			break;
-		case send:
-			if(USART_IsSendReady(1)) { USART_Send(s_data, 1);}
+			counter = 0;
 			if(USART_HasTransmitted(1))
 			{
 				s_data = carValues;
 			}
 			state = send;
+			break;
+		case send:
+			state = uart_start;
+			if(USART_IsSendReady(1) && counter < 3) 
+			{ 
+				USART_Send(s_data, 1);
+				counter++;
+				state = send;
+			}
 			break;
 		default:
 			state = uart_start;

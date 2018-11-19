@@ -13,7 +13,7 @@
 #include "scheduler.h"
 #include "usart_ATmega1284.h"
 
-unsigned char tmpA, tmpB, r_data; // USART variables
+unsigned char r_data1, r_data2, r_data3, counter; // USART variables
 
 unsigned char carSpeed = 0; // 00 - stopped, 01 - creep, 10 - medium, 11 - fast
 unsigned char carXAxis = 0; // 10 - left, 00 - straight, 01 - right
@@ -27,18 +27,41 @@ int uart_tick(int state)
 	switch(state)
 	{
 		case uart_start:
+			counter = 0;
 			state = receive;
 			break;
 		case receive:
-			if(USART_HasReceived(1))
+			if(USART_HasReceived(1) && counter == 0)
 			{
-				r_data = USART_Receive(1);
+				r_data1 = USART_Receive(1);  
+				USART_Flush(1);
+				counter++;
+				state = receive;
 			}
-			USART_Flush(1);
-			state = toggle;
+			else if(USART_HasReceived(1) && counter == 1)
+			{
+				r_data2 = USART_Receive(1);
+				USART_Flush(1);
+				counter++;
+				state = receive;
+			}
+			else if(USART_HasReceived(1) && counter == 2)
+			{
+				r_data3 = USART_Receive(1);
+				USART_Flush(1);
+				counter = 0;
+				state = toggle;
+			}
 			break;
 		case toggle:
-			carValues = r_data;
+			if((r_data1 == r_data2) || (r_data1 == (r_data3)))
+			{
+				carValues = r_data1;
+			}
+			else if(r_data2 == r_data3)
+			{
+				carValues = r_data2;
+			}
 			carSpeed = (carValues & 0x03);  
 			carXAxis = ((carValues >> 2) & 0x03);
 			carYAxis = ((carValues >> 4) & 0x01);
@@ -63,13 +86,13 @@ int TickFct_movement(int movement_state)
 		case left_right: // Right joystick controls left and right movements
 			if(carXAxis == 0x01) // Joystick is being tilted right (it is pointed the wrong way so if wired differently this code must be flipped
 			{
-// 				if(column_val == 0x01) { column_val = 0x80;} // Move left a row
-// 				else if (column_val != 0x01) { column_val = (column_val >> 1);} // Obviously a right shift must occur
+				PORTB = 0x8C; // 0x80
+				PORTD = 0x90; // 0x80
 			}
 			if(carXAxis == 0x02) // Joystick is being tilted left
 			{
-// 				if(column_val == 0x80) { column_val = 0x01;} // Move right a row
-// 				else if (column_val != 0x80) { column_val = (column_val << 1);} // Obviously a left shift must occur
+				PORTB = 0x54; // 0x10
+				PORTD = 0x21; // 0x20
 			}
 			movement_state = up_down;
 			break;
