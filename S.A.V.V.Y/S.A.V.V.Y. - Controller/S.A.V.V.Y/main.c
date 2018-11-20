@@ -13,7 +13,7 @@
 #include "scheduler.h"
 #include "usart_ATmega1284.h"
 
-unsigned char s_data, counter = 0x00; // USART variables
+unsigned char temp, s_data, counter = 0x00; // USART variables
 
 unsigned char carSpeed = 0; // 00 - stopped, 01 - creep, 10 - medium, 11 - fast
 unsigned char carXAxis = 0; // 10 - left, 00 - straight, 01 - right
@@ -123,7 +123,7 @@ int uart_tick(int state)
 			counter = 0; // Reset counter to 0 after all three signals have been sent
 			if(USART_HasTransmitted(1))
 			{
-				s_data = carValues; // Updates s_data if previous value has been transmitted
+				temp = carValues; // Updates s_data if previous value has been transmitted
 			}
 			state = send;
 			break;
@@ -131,6 +131,9 @@ int uart_tick(int state)
 			state = uart_start;
 			if(USART_IsSendReady(1) && counter < 3)  // Send three copies of the same signal for redundancy
 			{ 
+				if(counter == 0) {s_data = (temp | 0x80);} // Marker denoting first duplicate signal
+				if(counter == 1) {s_data = (temp | 0x40);} // Marker denoting second duplicate signal
+				if(counter == 2) {s_data = (temp | 0x20);} // Marker denoting third duplicate signal
 				USART_Send(s_data, 1); // Send s_data
 				counter++; // Updates counter
 				state = send;
