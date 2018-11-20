@@ -13,7 +13,7 @@
 #include "scheduler.h"
 #include "usart_ATmega1284.h"
 
-unsigned char s_data, counter; // USART variables
+unsigned char s_data, counter = 0x00; // USART variables
 
 unsigned char carSpeed = 0; // 00 - stopped, 01 - creep, 10 - medium, 11 - fast
 unsigned char carXAxis = 0; // 10 - left, 00 - straight, 01 - right
@@ -86,7 +86,7 @@ int TickFct_movement(int movement_state)
 			{
 				carValues = ((carValues & 0xF3) | 0x08); // L/R set to 10 for left
 			}
-			if(joystick < 450) // Joystick is being tilted right
+			else if(joystick < 450) // Joystick is being tilted right
 			{
 				carValues = ((carValues & 0xF3) | 0x04); // L/R set to 01 for right
 			}
@@ -100,7 +100,7 @@ int TickFct_movement(int movement_state)
 			{
 				carValues = (carValues & 0xEF); // F/R set to 0 for forward
 			}
-			if(joystick2 < 500) // Joystick is being tilted down
+			else if(joystick2 < 500) // Joystick is being tilted down
 			{
 				carValues = (carValues | 0x10); // F/R set to 1 for reverse
 			}
@@ -120,20 +120,19 @@ int uart_tick(int state)
 	switch(state)
 	{
 		case uart_start:
-			s_data = 0x00;
-			counter = 0;
+			counter = 0; // Reset counter to 0 after all three signals have been sent
 			if(USART_HasTransmitted(1))
 			{
-				s_data = carValues;
+				s_data = carValues; // Updates s_data if previous value has been transmitted
 			}
 			state = send;
 			break;
 		case send:
 			state = uart_start;
-			if(USART_IsSendReady(1) && counter < 3) 
+			if(USART_IsSendReady(1) && counter < 3)  // Send three copies of the same signal for redundancy
 			{ 
-				USART_Send(s_data, 1);
-				counter++;
+				USART_Send(s_data, 1); // Send s_data
+				counter++; // Updates counter
 				state = send;
 			}
 			break;
@@ -154,7 +153,6 @@ int main(void)
 	TimerSet(timerPeriod);
 	TimerOn();
 	A2D_init();
-	
 	initUSART(1);
 	
 	unsigned char i = 0;
@@ -164,7 +162,7 @@ int main(void)
 	tasks[i].TickFct = &TickFct_speed;
 	i++;
 	tasks[i].state = -1;
-	tasks[i].period = 500;
+	tasks[i].period = 250;
 	tasks[i].elapsedTime = 0;
 	tasks[i].TickFct = &TickFct_movement;
 	i++;
