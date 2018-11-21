@@ -11,7 +11,7 @@ Any bugs may be reported to jwool003@ucr.edu
 How to run S.A.V.V.Y.:
 
 * Use the left joystick to move forwards and backwards
-* Use the right joystick to turn, holding down both joysticks will allow you to perform a more gradual turn as you move forward
+* Use the right joystick to turn, using both joysticks allows you to perform a more gradual turn as you move forward
 * The vehicle will stop to avoid obstacles
 
 Summary:
