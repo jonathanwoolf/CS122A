@@ -165,12 +165,12 @@ int main(void)
 	tasks[i].TickFct = &TickFct_speed;
 	i++;
 	tasks[i].state = -1;
-	tasks[i].period = 250;
+	tasks[i].period = 50;
 	tasks[i].elapsedTime = 0;
 	tasks[i].TickFct = &TickFct_movement;
 	i++;
 	tasks[i].state = uart_start;
-	tasks[i].period = 50;
+	tasks[i].period = 25;
 	tasks[i].elapsedTime = 0;
 	tasks[i].TickFct = &uart_tick;
 

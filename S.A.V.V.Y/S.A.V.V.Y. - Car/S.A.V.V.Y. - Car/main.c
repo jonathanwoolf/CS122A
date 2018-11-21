@@ -32,7 +32,7 @@ int uart_tick(int state)
 				r_data1 = USART_Receive(1);  
 				//USART_Flush(1);
 				counter++; // Increments counter
-				if((r_data1 >> 7) != 1) {counter == 0;}
+				if((r_data1 >> 5) != 0x04) {counter = 0;}
 				r_data1 = r_data1 & 0x1F; // Remove denoter
 				state = receive;
 			}
@@ -41,7 +41,7 @@ int uart_tick(int state)
 				r_data2 = USART_Receive(1);
 				//USART_Flush(1);
 				counter++; // Increments counter
-				if((r_data2 >> 6) != 1) {counter == 0;}
+				if((r_data2 >> 5) != 0x02) {counter = 0;}
 				r_data2 = r_data2 & 0x1F;
 				state = receive;
 			}
@@ -51,7 +51,7 @@ int uart_tick(int state)
 				//USART_Flush(1);
 				counter = 0; // Resets the counter
 				state = toggle;
-				if((r_data3 >> 5) != 1) {state = receive;}
+				if((r_data3 >> 5) != 0x01) {state = receive;}
 				r_data3 = r_data3 & 0x1F;
 				
 			}
@@ -68,10 +68,6 @@ int uart_tick(int state)
 			carSpeed = (carValues & 0x03);  // carSpeed is represented by the first two values of carValues
 			carXAxis = ((carValues >> 2) & 0x03); // carXAxis is represented by the second 2 values of carValues
 			carYAxis = ((carValues >> 4) & 0x01); // carYAxis is represented by the 5th value of carValues
-
-// 			if(carSpeed == 0x01) { tasks[1].period = 300;}
-// 			else if(carSpeed == 0x02) { tasks[1].period = 150;}
-// 			else if(carSpeed == 0x03) { tasks[1].period = 50;}
 			state = receive;
 			break;
 		default:
@@ -82,44 +78,85 @@ int uart_tick(int state)
 }
 
 // Joysticks are actually wired sideways so left/right and up/down are switched but the states are labeled correctly for their observed actions
-enum movement_states {left_right, up_down} movement_state;
+enum movement_states {movement} movement_state;
 int TickFct_movement(int movement_state)
 {
 	switch(movement_state)
 	{
-		case left_right: // Right joystick controls left and right movements
-			if(carXAxis == 0x02) // Joystick is being tilted left
+		case movement: // Left joystick controls forward and back / Right joystick controls left and right movements
+			if(carXAxis == 0x00 && carSpeed == 0x00)
 			{
-				PORTB = 0x84;
-				PORTD = 0x80;
+				PORTB = 0x00; // Real nowhere man sitting in his nowhere land
+				PORTD = 0x00;
 			}
-			else if(carXAxis == 0x01) // Joystick is being tilted right
+			else 
 			{
-				PORTB = 0x14; // 0x10
-				PORTD = 0x20; // 0x20
+				if(carYAxis == 0x00 && carXAxis == 0x00 && carSpeed >= 0x01) // Forward
+				{
+					PORTB = 0x91; // Forward friends 10 signals to output
+					PORTD = 0xA0;
+				}
+				if(carYAxis == 0x01 && carXAxis == 0x00 && carSpeed >= 0x01) // Reverse
+				{
+					PORTB = 0x4A; // Backwards buds 01 signals to output
+					PORTD = 0x50;
+				}
+				if(carYAxis == 0x00 && carXAxis == 0x02 && carSpeed >= 0x01) // Forward and Left
+				{
+					PORTB = 0x94; // Forward friends but to the left
+					PORTD = 0x80;
+				}
+				if(carYAxis == 0x00 && carXAxis == 0x01 && carSpeed >= 0x01) // Forward and Right
+				{
+					PORTB = 0x14; // 0x10
+					PORTD = 0xA0; // 0x20
+				}
+				if(carXAxis == 0x02 && carSpeed == 0x00) // Stopped Left
+				{
+					PORTB = 0x84;
+					PORTD = 0x80;
+				}
+				if(carXAxis == 0x01 && carSpeed == 0x00) // Stopped Right
+				{
+					PORTB = 0x14; // 0x10
+					PORTD = 0x20; // 0x20
+				}	
 			}
-			movement_state = up_down;
+			movement_state = movement; // Return to left right state
 			break;
-		case up_down: // Left joystick controls forward and reverse movements
-			if(carYAxis == 0x00 && carSpeed >= 0x01) // Joystick is being tilted up
-			{
-				PORTB = 0x91; // Forward friends 10 signals to output 
-				PORTD = 0xA0;
-			}
-			else if(carYAxis == 0x01 && carSpeed >= 0x01) // Joystick is being tilted down
-			{
-				PORTB = 0x4A; // Backwards buds 01 signals to output
-				PORTD = 0x50;
-			}
-			else if(carXAxis == 0x00 && carSpeed == 0x00)
-			{
-					PORTB = 0x00; // Real nowhere man sitting in his nowhere land
-					PORTD = 0x00;
-			}
-			movement_state = left_right; // Return to left right state
-			break;
+// 		case left_right: // Right joystick controls left and right movements
+// 			if(carXAxis == 0x02) // Joystick is being tilted left
+// 			{
+// 				PORTB = 0x84;
+// 				PORTD = 0x80;
+// 			}
+// 			else if(carXAxis == 0x01) // Joystick is being tilted right
+// 			{
+// 				PORTB = 0x14; // 0x10
+// 				PORTD = 0x20; // 0x20
+// 			}
+// 			movement_state = up_down;
+// 			break;
+// 		case up_down: // Left joystick controls forward and reverse movements
+// 			if(carYAxis == 0x00 && carSpeed >= 0x01) // Joystick is being tilted up
+// 			{
+// 				PORTB = 0x91; // Forward friends 10 signals to output 
+// 				PORTD = 0xA0;
+// 			}
+// 			else if(carYAxis == 0x01 && carSpeed >= 0x01) // Joystick is being tilted down
+// 			{
+// 				PORTB = 0x4A; // Backwards buds 01 signals to output
+// 				PORTD = 0x50;
+// 			}
+// 			else if(carXAxis == 0x00 && carSpeed == 0x00)
+// 			{
+// 					PORTB = 0x00; // Real nowhere man sitting in his nowhere land
+// 					PORTD = 0x00;
+// 			}
+// 			movement_state = left_right; // Return to left right state
+// 			break;
 		default:
-			movement_state = left_right;
+			movement_state = movement;
 			break;
 	}
 	return movement_state;
@@ -155,12 +192,12 @@ int main(void)
 	
 	unsigned char i = 0;
 	tasks[i].state = -1;
-	tasks[i].period = 50;
+	tasks[i].period = 25;
 	tasks[i].elapsedTime = 0;
 	tasks[i].TickFct = &uart_tick;
 	i++;
 	tasks[i].state = -1;
-	tasks[i].period = 1;
+	tasks[i].period = 50;
 	tasks[i].elapsedTime = 0;
 	tasks[i].TickFct = &TickFct_movement;
 // 	i++;
