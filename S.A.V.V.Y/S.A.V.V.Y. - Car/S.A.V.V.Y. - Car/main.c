@@ -3,7 +3,9 @@
  *
  * Created: 11/13/2018 7:07:48 PM
  * Author : Jonathan Woolf
- */ 
+ */
+
+//FIXME: Make sure new else statement around remove denoter function doesn't remove performance
 
 #define timerPeriod 1
 #define tasksNum 2
@@ -30,41 +32,35 @@ int uart_tick(int state)
 			if(USART_HasReceived(1) && counter == 0) // Receives first copy of signal
 			{
 				r_data1 = USART_Receive(1);  
-				//USART_Flush(1);
+				USART_Flush(1);
 				counter++; // Increments counter
 				if((r_data1 >> 5) != 0x04) {counter = 0;}
-				r_data1 = r_data1 & 0x1F; // Remove denoter
+				else { r_data1 = r_data1 & 0x1F;} // Remove denoter
 				state = receive;
 			}
 			else if(USART_HasReceived(1) && counter == 1) // Receives second copy of signal
 			{
 				r_data2 = USART_Receive(1);
-				//USART_Flush(1);
+				USART_Flush(1);
 				counter++; // Increments counter
 				if((r_data2 >> 5) != 0x02) {counter = 0;}
-				r_data2 = r_data2 & 0x1F;
+				else { r_data2 = r_data2 & 0x1F;} // Remove denoter
 				state = receive;
+				if (r_data1 == r_data2) {carValues = r_data2; state = toggle;} 
 			}
 			else if(USART_HasReceived(1) && counter == 2) // Receives third copy of signal
 			{
 				r_data3 = USART_Receive(1);
-				//USART_Flush(1);
+				USART_Flush(1);
 				counter = 0; // Resets the counter
 				state = toggle;
-				if((r_data3 >> 5) != 0x01) {state = receive;}
-				r_data3 = r_data3 & 0x1F;
+				if((r_data3 >> 5) != 0x01) {state = receive;} // Remover denoter
+				else {r_data3 = r_data3 & 0x1F;}
+				if (r_data1 == r_data3 || r_data2 == r_data3) {carValues = r_data3;} 
 				
 			}
 			break;
 		case toggle:
-			if((r_data1 == r_data2) || (r_data1 == (r_data3))) // If r_data1 matches another r_data, set carValues to r_data1
-			{
-				carValues = r_data1;
-			}
-			else if(r_data2 == r_data3) // If r_data2 matches r_data3, set carValues to r_data2
-			{
-				carValues = r_data2;
-			}
 			carSpeed = (carValues & 0x03);  // carSpeed is represented by the first two values of carValues
 			carXAxis = ((carValues >> 2) & 0x03); // carXAxis is represented by the second 2 values of carValues
 			carYAxis = ((carValues >> 4) & 0x01); // carYAxis is represented by the 5th value of carValues
@@ -77,7 +73,6 @@ int uart_tick(int state)
 	return state;
 }
 
-// Joysticks are actually wired sideways so left/right and up/down are switched but the states are labeled correctly for their observed actions
 enum movement_states {movement} movement_state;
 int TickFct_movement(int movement_state)
 {
@@ -124,60 +119,12 @@ int TickFct_movement(int movement_state)
 			}
 			movement_state = movement; // Return to left right state
 			break;
-// 		case left_right: // Right joystick controls left and right movements
-// 			if(carXAxis == 0x02) // Joystick is being tilted left
-// 			{
-// 				PORTB = 0x84;
-// 				PORTD = 0x80;
-// 			}
-// 			else if(carXAxis == 0x01) // Joystick is being tilted right
-// 			{
-// 				PORTB = 0x14; // 0x10
-// 				PORTD = 0x20; // 0x20
-// 			}
-// 			movement_state = up_down;
-// 			break;
-// 		case up_down: // Left joystick controls forward and reverse movements
-// 			if(carYAxis == 0x00 && carSpeed >= 0x01) // Joystick is being tilted up
-// 			{
-// 				PORTB = 0x91; // Forward friends 10 signals to output 
-// 				PORTD = 0xA0;
-// 			}
-// 			else if(carYAxis == 0x01 && carSpeed >= 0x01) // Joystick is being tilted down
-// 			{
-// 				PORTB = 0x4A; // Backwards buds 01 signals to output
-// 				PORTD = 0x50;
-// 			}
-// 			else if(carXAxis == 0x00 && carSpeed == 0x00)
-// 			{
-// 					PORTB = 0x00; // Real nowhere man sitting in his nowhere land
-// 					PORTD = 0x00;
-// 			}
-// 			movement_state = left_right; // Return to left right state
-// 			break;
 		default:
 			movement_state = movement;
 			break;
 	}
 	return movement_state;
 }
-
-// Test harness for LED matrix to make sure all user inputs are read in correctly
-// enum car_States {synch} car_state;
-// int TickFct_carState(int state)
-// {
-// 	switch(car_state)
-// 	{
-// 		case synch:
-// 			//PORTB = 0x0F; //Test for DC Motor 0x08 is clockwise so 0x10 is counter
-// 			car_state = synch;
-// 			break;
-// 		default:
-// 			car_state = synch;
-// 			break;
-// 	}
-// 	return car_state;
-// }
 
 int main(void)
 {
@@ -187,7 +134,6 @@ int main(void)
 	
 	TimerSet(timerPeriod);
 	TimerOn();
-	
 	initUSART(1);
 	
 	unsigned char i = 0;
@@ -200,11 +146,6 @@ int main(void)
 	tasks[i].period = 50;
 	tasks[i].elapsedTime = 0;
 	tasks[i].TickFct = &TickFct_movement;
-// 	i++;
-// 	tasks[i].state = -1;
-// 	tasks[i].period = 50;
-// 	tasks[i].elapsedTime = 0;
-// 	tasks[i].TickFct = &TickFct_carState;
 	
 	while (1)
 	{
