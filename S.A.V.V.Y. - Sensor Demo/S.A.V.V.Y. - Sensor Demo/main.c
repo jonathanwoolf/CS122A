@@ -23,6 +23,9 @@
 #define OBJECT_DETECTED 5 // output pin for when an object is detected
 
 volatile unsigned short distance;
+volatile unsigned short distance1;
+volatile unsigned short distance2;
+volatile unsigned short distance3;
 volatile char stop_flag = 0; 
 void EnableDistance() {
 	SREG |= 0x80; // enable global interrupts
@@ -64,10 +67,10 @@ int TickFct_sonarState(int state)
 				PORTB = 0x01;
 			}
 			else { PORTB = 0x02;}
-			state = sonar;
+			state = sonarPulse;
 			break;
 		default:
-			state = sonar;
+			state = sonarPulse;
 			break;
 	}
 	return state;
@@ -91,9 +94,12 @@ int main(void)
 	
 	while (1)
 	{
-		distance = distanceCM();
-		if(distance <= 20) { PORTB = 0x01;}
-		else { PORTB = 0x02;}
-		 		 
+		distance1 = distanceCM();
+		distance2 = distanceCM();
+		distance3 = distanceCM();
+		
+		distance = (distance1 + distance2 + distance3) / 3;
+		if(distance <= 20) { stop_flag = 1;}
+		else { stop_flag = 0;}		 		 
 	}
 }
