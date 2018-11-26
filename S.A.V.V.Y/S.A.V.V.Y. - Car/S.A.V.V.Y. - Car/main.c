@@ -27,8 +27,8 @@ unsigned char carXAxis = 0; // 10 - left, 00 - straight, 01 - right
 unsigned char carYAxis = 0; // 0 - forward, 1 - reverse
 unsigned char carValues = 0x00; // bits 0-1 are speed, 2-3 are left/right, 4 is forward/reverse
 
-volatile unsigned short distance;
-volatile char stop_flag = 0;
+//volatile unsigned short distance;
+//volatile char stop_flag = 0;
 
 // Returns the distance in centimeters from a detected object
 unsigned short distanceCM() {
@@ -92,17 +92,20 @@ int uart_tick(int state)
 enum movement_states {movement} movement_state;
 int TickFct_movement(int movement_state)
 {
+	short distance;
+	
 	switch(movement_state)
 	{
 		case movement: // Left joystick controls forward and back / Right joystick controls left and right movements
+			distance = distanceCM();
 			if(carXAxis == 0x00 && carSpeed == 0x00)
 			{
 				PORTB = 0x00; // Real nowhere man sitting in his nowhere land
 				PORTD = 0x00;
 			}
-			if((carXAxis != 0x00 || carSpeed != 0x00) && stop_flag == 0)
+			else
 			{
-				if(carYAxis == 0x00 && carXAxis == 0x00 && carSpeed >= 0x01) // Forward
+				if(carYAxis == 0x00 && carXAxis == 0x00 && carSpeed >= 0x01 && distance >= 21) // Forward
 				{
 					PORTB = 0x91; // Forward friends 10 signals to output
 					PORTD = 0xA0;
@@ -112,12 +115,12 @@ int TickFct_movement(int movement_state)
 					PORTB = 0x49; // Backwards buds 01 signals to output
 					PORTD = 0x50;
 				}
-				if(carYAxis == 0x00 && carXAxis == 0x02 && carSpeed >= 0x01) // Forward and Left
+				if(carYAxis == 0x00 && carXAxis == 0x02 && carSpeed >= 0x01 && distance >= 21) // Forward and Left
 				{
 					PORTB = 0x94; // Forward friends but to the left
 					PORTD = 0x80;
 				}
-				if(carYAxis == 0x00 && carXAxis == 0x01 && carSpeed >= 0x01) // Forward and Right
+				if(carYAxis == 0x00 && carXAxis == 0x01 && carSpeed >= 0x01 && distance >= 21) // Forward and Right
 				{
 					PORTB = 0x14; // 0x10
 					PORTD = 0xA0; // 0x20
@@ -146,19 +149,16 @@ int main(void)
 {
 	DDRA = 0xFF; PORTA = 0x00; // Output for trigger pin
 	DDRB = 0xFF; PORTB = 0x00; // Output to motors and lights
-	DDRD = 0xFF; PORTD = 0x00; // Output to motors
-	
+	//DDRD = 0xFF; PORTD = 0x00; // Output to motors
 	// Input from RF Receiver will be received from RX1 
-	
+
 	// Enables distance measurement
 	SREG |= 0x80; // Enable global interrupts
-
 	// Sets interrupt to trigger on logic changes
 	EICRA |= (1 << ISC10); 
 	EICRA &= ~(1 << ISC11); 
-		
-	EIMSK |= (1 << INT1); // Enables external interrupt 1 (PD3)
-		
+	// Enables external interrupt 1 (PD3)
+	EIMSK |= (1 << INT1); 
 	// Sets sensor trigger in PORTA as output
 	DDRA |= (1 << TRIGGER);
 	PORTA &= ~(1 << TRIGGER);
@@ -168,6 +168,7 @@ int main(void)
 	// Sets OBJECT DETECTED pin as output in PORTA
 	DDRA |= (1 << OBJECT_DETECTED);
 	PORTA &= ~(1 << OBJECT_DETECTED);
+	// End of distance measurement enabling code 
 	
 	initUSART(1);	
 	TimerSet(timerPeriod);
@@ -186,8 +187,8 @@ int main(void)
 	
 	while (1)
 	{
-		distance = distanceCM();
-		if(distance <= 20) { carSpeed = 0x00; stop_flag = 1;}
-		else { stop_flag = 0;}
+// 		distance = distanceCM();
+// 		while(distance <= 20) { stop_flag = 1;}
+// 		stop_flag = 0;
 	}
 }
