@@ -88,7 +88,7 @@ int main(void)
 	
 	unsigned char i = 0;
 	tasks[i].state = -1;
-	tasks[i].period = 1; // Should be .01ms instead of 1 for optimal performance
+	tasks[i].period = 50; // Should be .01ms instead of 1 for optimal performance
 	tasks[i].elapsedTime = 0;
 	tasks[i].TickFct = &TickFct_sonarState;
 	
