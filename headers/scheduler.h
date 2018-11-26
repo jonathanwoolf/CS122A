@@ -13,6 +13,10 @@
 unsigned long tasksPeriodGCD = 1; // Start count from here, down to 0. Default 1ms
 unsigned long tasksPeriodCntDown = 0; // Current internal count of 1ms ticks
 
+// Variables for the ultrasonic sensor
+volatile unsigned short sonar = 0;
+volatile char sonar_flag = 0;
+
 //unsigned char tasksNum = 0; // Number of tasks in the scheduler. Default 0 tasks
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,6 +51,22 @@ ISR(TIMER1_COMPA_vect) {
 	if (tasksPeriodCntDown == 0) { 	// results in a more efficient compare
 		TimerISR(); 				// Call the ISR that the user uses
 		tasksPeriodCntDown = tasksPeriodGCD;
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Interrupt Service Routine for ultrasonic sensor that disables counter to record counter memory 
+ISR(INT1_vect)
+{
+	if (sonar_flag == 1) {
+		sonar_flag = 0; // Reset flag
+		TCCR3B = 0; // Disable counter
+		sonar = TCNT3; // Store counter memory
+		TCNT3 = 0; // Reset counter memory
+	}
+	else {
+		sonar_flag = 1; // Reset flag
+		TCCR3B |= (1 << CS31); // Enable counter
 	}
 }
 
