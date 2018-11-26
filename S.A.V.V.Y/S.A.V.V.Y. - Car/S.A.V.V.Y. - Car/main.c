@@ -95,9 +95,7 @@ int uart_tick(int state)
 
 enum movement_states {movement} movement_state;
 int TickFct_movement(int movement_state)
-{
-	short distance;
-	
+{	
 	switch(movement_state)
 	{
 		case movement: // Left joystick controls forward and back / Right joystick controls left and right movements
@@ -108,7 +106,7 @@ int TickFct_movement(int movement_state)
 			}
 			else
 			{
-				if(carYAxis == 0x00 && carXAxis == 0x00 && carSpeed >= 0x01 && distance >= 21 && stop_flag == 0) // Forward
+				if(carYAxis == 0x00 && carXAxis == 0x00 && carSpeed >= 0x01 && stop_flag == 0) // Forward
 				{
 					PORTB = 0x91; // Forward friends 10 signals to output
 					PORTD = 0xA0;
@@ -118,12 +116,12 @@ int TickFct_movement(int movement_state)
 					PORTB = 0x49; // Backwards buds 01 signals to output
 					PORTD = 0x50;
 				}
-				if(carYAxis == 0x00 && carXAxis == 0x02 && carSpeed >= 0x01 && distance >= 21 && stop_flag == 0) // Forward and Left
+				if(carYAxis == 0x00 && carXAxis == 0x02 && carSpeed >= 0x01 && stop_flag == 0) // Forward and Left
 				{
 					PORTB = 0x94; // Forward friends but to the left
 					PORTD = 0x80;
 				}
-				if(carYAxis == 0x00 && carXAxis == 0x01 && carSpeed >= 0x01 && distance >= 21 && stop_flag == 0) // Forward and Right
+				if(carYAxis == 0x00 && carXAxis == 0x01 && carSpeed >= 0x01 && stop_flag == 0) // Forward and Right
 				{
 					PORTB = 0x14; // 0x10
 					PORTD = 0xA0; // 0x20
