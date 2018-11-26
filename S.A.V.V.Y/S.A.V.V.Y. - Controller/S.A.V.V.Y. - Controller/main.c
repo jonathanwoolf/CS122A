@@ -1,9 +1,9 @@
 /*
- * S.A.V.V.Y. Control Unit
- *
- * Created: 10/30/2018 5:56:21 PM
- * Author : Jonathan Woolf
- */ 
+* S.A.V.V.Y. Control Unit
+*
+* Created: 10/30/2018 5:56:21 PM
+* Author : Jonathan Woolf
+*/
 
 #define timerPeriod 1
 #define tasksNum 3
@@ -55,9 +55,9 @@ enum speed_states {speed_check} speed_state;
 int TickFct_speed(int speed_state)
 {
 	Set_A2D_Pin(0x03); // Sets analog signal to the up/down axis of the left joystick
- 	convert();
- 	joystick2 = ADC;
-	
+	convert();
+	joystick2 = ADC;
+
 	switch(speed_state)
 	{
 		case speed_check: // Decides how fast the car is going
@@ -73,6 +73,7 @@ int TickFct_speed(int speed_state)
 
 // Joysticks are actually wired sideways so left/right and up/down are switched but the states are labeled correctly for their observed actions
 enum movement_states {left_right, up_down} movement_state;
+	
 int TickFct_movement(int movement_state)
 {
 	switch(movement_state)
@@ -93,10 +94,10 @@ int TickFct_movement(int movement_state)
 			movement_state = up_down;
 			break;
 		case up_down: // Left joystick controls forward and reverse movements
- 			Set_A2D_Pin(0x03); // Sets analog signal to the up/down axis of the left joystick
- 			convert();
-			joystick2 = ADC; // Read ADC value into joystick2 variable 
-			if(joystick2 > 600) // Joystick is being tilted up 
+			Set_A2D_Pin(0x03); // Sets analog signal to the up/down axis of the left joystick
+			convert();
+			joystick2 = ADC; // Read ADC value into joystick2 variable
+			if(joystick2 > 600) // Joystick is being tilted up
 			{
 				carValues = (carValues & 0xEF); // F/R set to 0 for forward
 			}
@@ -130,7 +131,7 @@ int uart_tick(int state)
 		case send:
 			state = uart_start;
 			if(USART_IsSendReady(1) && counter < 3)  // Send three copies of the same signal for redundancy
-			{ 
+			{
 				if(counter == 0) {s_data = (temp | 0x80);} // Marker denoting first duplicate signal
 				if(counter == 1) {s_data = (temp | 0x40);} // Marker denoting second duplicate signal
 				if(counter == 2) {s_data = (temp | 0x20);} // Marker denoting third duplicate signal
@@ -141,7 +142,7 @@ int uart_tick(int state)
 			break;
 		default:
 			state = uart_start;
-			break;
+		break;
 	}
 	return state;
 }
@@ -151,13 +152,13 @@ int main(void)
 {
 	DDRA = 0x00; PORTA = 0xFF; // Input
 	DDRB = 0xFF; PORTB = 0x00; // Output to column sel
-    // Output from RF transmitter will be sent from TX1 DO NOT INITIALIZE DDRD / PORTD as it will not send
-	
+	// Output from RF transmitter will be sent from TX1 DO NOT INITIALIZE DDRD / PORTD as it will not send
+
 	TimerSet(timerPeriod);
 	TimerOn();
 	A2D_init();
 	initUSART(1);
-	
+
 	unsigned char i = 0;
 	tasks[i].state = speed_check;
 	tasks[i].period = 50;
