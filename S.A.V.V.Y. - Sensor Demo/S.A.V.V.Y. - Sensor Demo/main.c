@@ -12,21 +12,22 @@
 #define timerPeriod 1
 #define tasksNum 1
 #define F_CPU 8000000UL // 8mhz microcontroller
+#define ECHO 3 // input to listen for echo uses -INT0- External Interrupt Request 0.
+#define TRIGGER 3 // output triggers sensor
+#define OBJECT_DETECTED 5 // output pin for when an object is detected
 
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
 #include "scheduler.h"
 
-#define ECHO 3 // input to listen for echo uses -INT0- External Interrupt Request 0.
-#define TRIGGER 3 // output triggers sensor
-#define OBJECT_DETECTED 5 // output pin for when an object is detected
-
 volatile unsigned short distance;
 volatile unsigned short distance1;
 volatile unsigned short distance2;
 volatile unsigned short distance3;
+
 volatile char stop_flag = 0; 
+
 void EnableDistance() {
 	SREG |= 0x80; // enable global interrupts
 
@@ -82,7 +83,25 @@ int main(void)
 	DDRB = 0xFF; PORTB = 0x00; // Output to motors and lights
 	DDRD = 0xFF; PORTD = 0x00; // Output to motors
 	
-	EnableDistance();
+	// Enables distance measurement
+	SREG |= 0x80; // Enable global interrupts
+	// Sets interrupt to trigger on logic changes
+	EICRA |= (1 << ISC10);
+	EICRA &= ~(1 << ISC11);
+	// Enables external interrupt 1 (PD3)
+	EIMSK |= (1 << INT1);
+	// Sets sensor trigger in PORTA as output
+	DDRA |= (1 << TRIGGER);
+	PORTA &= ~(1 << TRIGGER);
+	// Sets sensor echo as input in PORTD, enable pull-up
+	DDRD &= ~(1 << ECHO);
+	PORTD |= (1 << ECHO);
+	// Sets OBJECT DETECTED pin as output in PORTA
+	DDRA |= (1 << OBJECT_DETECTED);
+	PORTA &= ~(1 << OBJECT_DETECTED);
+	// End of distance measurement enabling code
+	
+	//EnableDistance();
 	TimerSet(timerPeriod);
 	TimerOn();
 	
