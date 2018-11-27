@@ -3,7 +3,8 @@
  *
  * Created: 11/13/2018 7:07:48 PM
  * Author : Jonathan Woolf
- * Special acknowledgment: Adriel Bustamante, Cody Simons, and Rohit Joshi - thank you all for dealing with me during these troubling times
+ * Special acknowledgment: Adriel Bustamante, Cody Simons, and Rohit Joshi 
+ * - thank you all for dealing with me during these troubling times
  */
 
 #define timerPeriod 1
