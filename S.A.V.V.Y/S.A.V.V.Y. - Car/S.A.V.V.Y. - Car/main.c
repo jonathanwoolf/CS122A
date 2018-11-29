@@ -98,6 +98,10 @@ int usart_tick(int state)
 			if(distance <= 30 && carYAxis != 0x01) { // Car stops if moving forward and object is detected within 30cm
 				carSpeed = 0x00;
 			}
+// 		    // Set PWM for 50% duty cycle
+// 			if(carSpeed == 0x01 || carSpeed == 0x10) { OCR0A = 128;}
+// 		    // Set PWM for 100% duty cycle
+// 			if(carSpeed == 0x11) { OCR0A = 250;}
 			state = receive;
 			break;
 		default:
@@ -115,39 +119,46 @@ int TickFct_movement(int movement_state)
 		case movement: // Left joystick controls forward and back / Right joystick controls left and right movements
 			if(carXAxis == 0x00 && carSpeed == 0x00)
 			{
-				PORTB = 0x00; // Real nowhere man sitting in his nowhere land receiving 0x00 speed reading 
+				PORTC = 0x00; // Real nowhere man sitting in his nowhere land receiving 0x00 speed reading 
 				PORTD = 0x00;
 			}
 			else
 			{
 				if(carYAxis == 0x00 && carXAxis == 0x00 && carSpeed >= 0x01) // Forward 
 				{
-					PORTB = 0x91; // Forward friends 10 signals to output and only left joystick is being used
+					PORTB = 0x01;
+					PORTC = 0xA0; // Forward friends 10 signals to output and only left joystick is being used
 					PORTD = 0xA0;
 				}
 				if(carYAxis == 0x01 && carXAxis == 0x00 && carSpeed >= 0x01) // Reverse
 				{
-					PORTB = 0x4A; // Backwards buds 01 signals to output and only right joystick is being used
+					PORTC = 0x50;
+					PORTB = 0x02; // Backwards buds 01 signals to output and only right joystick is being used
 					PORTD = 0x50;
 				}
 				if(carYAxis == 0x00 && carXAxis == 0x02 && carSpeed >= 0x01) // Forward and Left
 				{
-					PORTB = 0x94; // Forward friends but to the left
-					PORTD = 0x80;
+					
+					PORTB = 0x04; // Forward friends but to the left
+					PORTC = 0xA0;
+					PORTD = 0x80; 
 				}
 				if(carYAxis == 0x00 && carXAxis == 0x01 && carSpeed >= 0x01) // Forward and Right
 				{
-					PORTB = 0x14; // 0x10
+					PORTB = 0x04; // 0x10
+					PORTC = 0x80;
 					PORTD = 0xA0; // 0x20
 				}
 				if(carXAxis == 0x02 && carSpeed == 0x00) // Stopped Left
 				{
-					PORTB = 0x84; // Only right joystick is being used
+					PORTB = 0x04; // Only right joystick is being used
+					PORTC = 0x20;
 					PORTD = 0x80;
 				}
 				if(carXAxis == 0x01 && carSpeed == 0x00) // Stopped Right
 				{
-					PORTB = 0x14; // 0x10 Only right joystick is being used
+					PORTB = 0x04; // 0x10 Only right joystick is being used
+					PORTC = 0x80;
 					PORTD = 0x20; // 0x20
 				}	
 			}
@@ -164,6 +175,7 @@ int main(void)
 {
 	DDRA = 0xFF; PORTA = 0x00; // Output for trigger pin
 	DDRB = 0xFF; PORTB = 0x00; // Output to motors and lights
+	DDRC = 0xFF; PORTB = 0x00; // New output for motors
 	DDRD = 0xFF; PORTD = 0x00; // Output to motors
 	// Input from RF Receiver will be received from RX0
 
@@ -189,6 +201,15 @@ int main(void)
 	TimerOn();
 	initUSART(0); // RXD1 and INT0 are the same so I had to switch to USART(0)
 	
+// 	TCCR0A |= (1 << COM0A1);
+// 	// set none-inverting mode
+// 	
+// 	TCCR0A |= (1 << WGM01) | (1 << WGM00);
+// 	// set fast PWM Mode
+// 	
+// 	TCCR0B |= (1 << CS01);
+// 	// set prescaler to 8 and starts PWM
+	
 	unsigned char i = 0;
 	tasks[i].state = -1;
 	tasks[i].period = 25;
@@ -204,31 +225,3 @@ int main(void)
 	{
 	}
 }
-
-// int main(void)
-// {
-// 	
-// 	DDRD = 0xFF;	/* Make OC1A pin as output */
-// 	DDRB = 0xFF;
-// 	//PORTD |= (1 << PORTD5);
-// 	//PORTD |= (1 << PORTD6);
-// 	PORTB |= (1 << PORTB2);
-// 	
-// 	OCR0A = 128;
-// 	// set PWM for 50% duty cycle
-// 
-// 
-// 	TCCR0A |= (1 << COM0A1);
-// 	// set none-inverting mode
-// 
-// 	TCCR0A |= (1 << WGM01) | (1 << WGM00);
-// 	// set fast PWM Mode
-// 
-// 	TCCR0B |= (1 << CS01);
-// 	// set prescaler to 8 and starts PWM
-// 	
-// 	while (1);
-// 	{
-// 		// we have a working Fast PWM
-// 	}
-// }
