@@ -92,7 +92,10 @@ int usart_tick(int state)
 			if(distance > 30 || carYAxis == 0x01) { // Car moves if object isn't detected or if moving backwards
 				carSpeed = (carValues & 0x03);  // carSpeed is represented by the first two values of carValues
 			}
-			if(distance <= 30 && carYAxis != 0x01) { // Car stops if moving forward and object is detected withn 30cm
+			if(distance <= 45 && carSpeed != 0x00 && carXAxis != 0x00) { // Car stops if moving forward at an angle and object is detected within 45cm
+				carSpeed = 0x00;
+			}
+			if(distance <= 30 && carYAxis != 0x01) { // Car stops if moving forward and object is detected within 30cm
 				carSpeed = 0x00;
 			}
 			state = receive;
@@ -201,3 +204,31 @@ int main(void)
 	{
 	}
 }
+
+// int main(void)
+// {
+// 	
+// 	DDRD = 0xFF;	/* Make OC1A pin as output */
+// 	DDRB = 0xFF;
+// 	//PORTD |= (1 << PORTD5);
+// 	//PORTD |= (1 << PORTD6);
+// 	PORTB |= (1 << PORTB2);
+// 	
+// 	OCR0A = 128;
+// 	// set PWM for 50% duty cycle
+// 
+// 
+// 	TCCR0A |= (1 << COM0A1);
+// 	// set none-inverting mode
+// 
+// 	TCCR0A |= (1 << WGM01) | (1 << WGM00);
+// 	// set fast PWM Mode
+// 
+// 	TCCR0B |= (1 << CS01);
+// 	// set prescaler to 8 and starts PWM
+// 	
+// 	while (1);
+// 	{
+// 		// we have a working Fast PWM
+// 	}
+// }
