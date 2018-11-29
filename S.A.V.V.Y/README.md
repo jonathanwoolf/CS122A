@@ -12,7 +12,7 @@ How to run S.A.V.V.Y.:
 
 * Use the left joystick to move forwards and backwards
 * Use the right joystick to turn, using both joysticks allows you to perform a more gradual turn as you move forward
-* The vehicle will stop to avoid obstacles
+* The vehicle will stop automatically to avoid obstacles from the front
 
 Summary:
 
@@ -22,8 +22,8 @@ Summary:
 Complexity:
 
 * USART communication between the controller and car by way of RF radio waves
-* Redundancy and parity bit to ensure only the proper signals are acted upon by S.A.V.V.Y.
-* Joysticks to allow complete control of the vehicle
+* Redundancy and parity bits to ensure only the proper signals are acted upon by S.A.V.V.Y.
+* Two joysticks to allow complete control of the vehicle
 * An 8x8 RGB LED matrix was used to test the controller (RF transmission and joysticks)
 * Ultrasonic sensor to detect obstacles
 * Two H-bridges and 4 DC motors to provide motion
@@ -32,9 +32,12 @@ Bugs:
 
 * When the controller is turned off, S.A.V.V.Y. gets overrun with noise from the motors that causes it to move on it's own. 
   This cannot occur when the remote is on as it is constantly transmitting a stronger signal than the noise 
+* If all three redundant signals are different and S.A.V.V.Y. gets stuck on an old command it will ignore input from the ultrasonic 
+  sensor and refuse to stop
+* If the user is moving forward and turning at the same time, S.A.V.V.Y. will not stop for detected objects
 
 Demo Videos:
 
-https://www.youtube.com/watch?v=caX4SWuiUFY
+https://www.youtube.com/watch?v=caX4SWuiUFY - Controller & RF demo
 
-https://www.youtube.com/watch?v=-sieFKYgOlw
+https://www.youtube.com/watch?v=-sieFKYgOlw - Basic movement demo
