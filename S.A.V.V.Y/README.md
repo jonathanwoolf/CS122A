@@ -42,4 +42,4 @@ https://www.youtube.com/watch?v=caX4SWuiUFY - Controller & RF demo
 
 https://www.youtube.com/watch?v=-sieFKYgOlw - Basic movement demo
 
-https://www.youtube.com/watch?v=_w6gyXy0qTg - Final build & Ultrasonic Sensor demo
+https://www.youtube.com/watch?v=mfmpazs6GBU - Final build & Ultrasonic Sensor demo
